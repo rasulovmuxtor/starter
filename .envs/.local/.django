@@ -1,0 +1,4 @@
+DEBUG=1
+ALLOWED_HOSTS=*
+REDIS_URL=redis://redis:6379/0
+SECRET_KEY=c*$viw(-#0s(4jz=z4smka2w-7w+04-lj@f077*b$s=k5*5s=v

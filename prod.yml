@@ -1,0 +1,67 @@
+version: '3'
+
+volumes:
+  production_postgres_data: { }
+  # django
+  production_temp_data: { }
+  production_media: { }
+  production_static: { }
+  production_locale: { }
+
+services:
+  django:
+    build:
+      context: .
+      dockerfile: ./compose/production/django/Dockerfile
+    volumes:
+      - production_temp_data:/tmp/
+      - production_media:/app/media/
+      - production_static:/app/staticfiles/
+      - production_locale:/app/locale/
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ./.envs/.production/.django
+      - ./.envs/.production/.postgres
+    command: /start
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "10"
+
+  postgres:
+    image: postgres:14.1-alpine
+    volumes:
+      - production_postgres_data:/var/lib/postgresql/data
+    env_file:
+      - ./.envs/.production/.postgres
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "10"
+
+  nginx:
+    image: nginx
+    ports:
+      - "0.0.0.0:80:80"
+    volumes:
+      - production_media:/app/media/
+      - production_static:/app/staticfiles/
+      - ./compose/production/nginx/:/etc/nginx/conf.d/
+    depends_on:
+      - django
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "10"
+
+  redis:
+    image: redis:5.0
+    restart: always
